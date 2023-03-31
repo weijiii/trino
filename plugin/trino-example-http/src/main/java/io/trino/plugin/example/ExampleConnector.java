@@ -20,9 +20,12 @@ import io.trino.spi.connector.ConnectorRecordSetProvider;
 import io.trino.spi.connector.ConnectorSession;
 import io.trino.spi.connector.ConnectorSplitManager;
 import io.trino.spi.connector.ConnectorTransactionHandle;
+import io.trino.spi.function.FunctionProvider;
 import io.trino.spi.transaction.IsolationLevel;
 
 import javax.inject.Inject;
+
+import java.util.Optional;
 
 import static io.trino.plugin.example.ExampleTransactionHandle.INSTANCE;
 import static java.util.Objects.requireNonNull;
@@ -34,18 +37,21 @@ public class ExampleConnector
     private final ExampleMetadata metadata;
     private final ExampleSplitManager splitManager;
     private final ExampleRecordSetProvider recordSetProvider;
+    private final ExampleFunctionProvider exampleFunctionProvider;
 
     @Inject
     public ExampleConnector(
             LifeCycleManager lifeCycleManager,
             ExampleMetadata metadata,
             ExampleSplitManager splitManager,
-            ExampleRecordSetProvider recordSetProvider)
+            ExampleRecordSetProvider recordSetProvider,
+            ExampleFunctionProvider exampleFunctionProvider)
     {
         this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
         this.metadata = requireNonNull(metadata, "metadata is null");
         this.splitManager = requireNonNull(splitManager, "splitManager is null");
         this.recordSetProvider = requireNonNull(recordSetProvider, "recordSetProvider is null");
+        this.exampleFunctionProvider = requireNonNull(exampleFunctionProvider, "exampleFunctionProvider is null");
     }
 
     @Override
@@ -70,6 +76,12 @@ public class ExampleConnector
     public ConnectorRecordSetProvider getRecordSetProvider()
     {
         return recordSetProvider;
+    }
+
+    @Override
+    public Optional<FunctionProvider> getFunctionProvider()
+    {
+        return Optional.of(exampleFunctionProvider);
     }
 
     @Override

@@ -14,8 +14,11 @@
 package io.trino.plugin.example;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import io.trino.spi.Plugin;
 import io.trino.spi.connector.ConnectorFactory;
+
+import java.util.Set;
 
 public class ExamplePlugin
         implements Plugin
@@ -24,5 +27,13 @@ public class ExamplePlugin
     public Iterable<ConnectorFactory> getConnectorFactories()
     {
         return ImmutableList.of(new ExampleConnectorFactory());
+    }
+
+    @Override
+    public Set<Class<?>> getFunctions()
+    {
+        return ImmutableSet.<Class<?>>builder()
+                .add(ExampleFunctions.class)
+                .build();
     }
 }
