@@ -25,24 +25,31 @@ import static java.util.Objects.requireNonNull;
 public class ShowFunctions
         extends Statement
 {
+    private final Optional<QualifiedName> schema;
     private final Optional<String> likePattern;
     private final Optional<String> escape;
 
-    public ShowFunctions(Optional<String> likePattern, Optional<String> escape)
+    public ShowFunctions(Optional<QualifiedName> schema, Optional<String> likePattern, Optional<String> escape)
     {
-        this(Optional.empty(), likePattern, escape);
+        this(Optional.empty(), schema, likePattern, escape);
     }
 
-    public ShowFunctions(NodeLocation location, Optional<String> likePattern, Optional<String> escape)
+    public ShowFunctions(NodeLocation location, Optional<QualifiedName> schema, Optional<String> likePattern, Optional<String> escape)
     {
-        this(Optional.of(location), likePattern, escape);
+        this(Optional.of(location), schema, likePattern, escape);
     }
 
-    private ShowFunctions(Optional<NodeLocation> location, Optional<String> likePattern, Optional<String> escape)
+    private ShowFunctions(Optional<NodeLocation> location, Optional<QualifiedName> schema, Optional<String> likePattern, Optional<String> escape)
     {
         super(location);
+        this.schema = requireNonNull(schema, "schema is null");
         this.likePattern = requireNonNull(likePattern, "likePattern is null");
         this.escape = requireNonNull(escape, "escape is null");
+    }
+
+    public Optional<QualifiedName> getSchema()
+    {
+        return schema;
     }
 
     public Optional<String> getLikePattern()
@@ -70,7 +77,7 @@ public class ShowFunctions
     @Override
     public int hashCode()
     {
-        return Objects.hash(likePattern, escape);
+        return Objects.hash(schema, likePattern, escape);
     }
 
     @Override
@@ -83,7 +90,8 @@ public class ShowFunctions
             return false;
         }
         ShowFunctions o = (ShowFunctions) obj;
-        return Objects.equals(likePattern, o.likePattern) &&
+        return Objects.equals(schema, o.schema) &&
+                Objects.equals(likePattern, o.likePattern) &&
                 Objects.equals(escape, o.escape);
     }
 
@@ -91,6 +99,7 @@ public class ShowFunctions
     public String toString()
     {
         return toStringHelper(this)
+                .add("schema", schema)
                 .add("likePattern", likePattern)
                 .add("escape", escape)
                 .toString();

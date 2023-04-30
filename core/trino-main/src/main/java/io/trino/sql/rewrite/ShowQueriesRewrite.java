@@ -773,16 +773,43 @@ public final class ShowQueriesRewrite
         @Override
         protected Node visitShowFunctions(ShowFunctions node, Void context)
         {
-            List<Expression> rows = metadata.listFunctions(session).stream()
-                    .filter(function -> !function.isHidden())
-                    .map(function -> row(
-                            new StringLiteral(function.getSignature().getName()),
-                            new StringLiteral(function.getSignature().getReturnType().toString()),
-                            new StringLiteral(Joiner.on(", ").join(function.getSignature().getArgumentTypes())),
-                            new StringLiteral(getFunctionType(function)),
-                            function.isDeterministic() ? TRUE_LITERAL : FALSE_LITERAL,
-                            new StringLiteral(nullToEmpty(function.getDescription()))))
-                    .collect(toImmutableList());
+            // Add listFunctions(Session, CatalogSchemaName) to enable retrieving functions from a schema
+            List<Expression> rows;
+            Optional<QualifiedName> optionalSchema = node.getSchema();
+            if (optionalSchema.isPresent()) {
+                CatalogSchemaName schema = createCatalogSchemaName(session, node, node.getSchema());
+
+                if (!metadata.catalogExists(session, schema.getCatalogName())) {
+                    throw semanticException(CATALOG_NOT_FOUND, node, "Catalog '%s' does not exist", schema.getCatalogName());
+                }
+
+                if (!metadata.schemaExists(session, schema)) {
+                    throw semanticException(SCHEMA_NOT_FOUND, node, "Schema '%s' does not exist", schema.getSchemaName());
+                }
+
+                rows = metadata.listFunctions(session, schema).stream()
+                        .filter(function -> !function.isHidden())
+                        .map(function -> row(
+                                new StringLiteral(function.getSignature().getName()),
+                                new StringLiteral(function.getSignature().getReturnType().toString()),
+                                new StringLiteral(Joiner.on(", ").join(function.getSignature().getArgumentTypes())),
+                                new StringLiteral(getFunctionType(function)),
+                                function.isDeterministic() ? TRUE_LITERAL : FALSE_LITERAL,
+                                new StringLiteral(nullToEmpty(function.getDescription()))))
+                        .collect(toImmutableList());
+            }
+            else {
+                rows = metadata.listFunctions(session).stream()
+                        .filter(function -> !function.isHidden())
+                        .map(function -> row(
+                                new StringLiteral(function.getSignature().getName()),
+                                new StringLiteral(function.getSignature().getReturnType().toString()),
+                                new StringLiteral(Joiner.on(", ").join(function.getSignature().getArgumentTypes())),
+                                new StringLiteral(getFunctionType(function)),
+                                function.isDeterministic() ? TRUE_LITERAL : FALSE_LITERAL,
+                                new StringLiteral(nullToEmpty(function.getDescription()))))
+                        .collect(toImmutableList());
+            }
 
             Map<String, String> columns = ImmutableMap.<String, String>builder()
                     .put("function_name", "Function")
@@ -829,6 +856,17 @@ public final class ShowQueriesRewrite
                     throw new IllegalArgumentException("Unexpected function kind: " + kind); // TODO https://github.com/trinodb/trino/issues/12550
             }
             throw new IllegalArgumentException("Unsupported function kind: " + kind);
+        }
+
+        private void checkCatalogSchemaExists(Node node, CatalogSchemaName schema)
+        {
+            if (!metadata.catalogExists(session, schema.getCatalogName())) {
+                throw semanticException(CATALOG_NOT_FOUND, node, "Catalog '%s' does not exist", schema.getCatalogName());
+            }
+
+            if (!metadata.schemaExists(session, schema)) {
+                throw semanticException(SCHEMA_NOT_FOUND, node, "Schema '%s' does not exist", schema.getSchemaName());
+            }
         }
 
         @Override

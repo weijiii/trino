@@ -2112,6 +2112,17 @@ public final class MetadataManager
     }
 
     @Override
+    public Collection<FunctionMetadata> listFunctions(Session session, CatalogSchemaName schema)
+    {
+        ImmutableList.Builder<FunctionMetadata> functions = ImmutableList.builder();
+        getOptionalCatalogMetadata(session, schema.getCatalogName()).ifPresent(metadata -> {
+            ConnectorSession connectorSession = session.toConnectorSession(metadata.getCatalogHandle());
+            functions.addAll(metadata.getMetadata(session).listFunctions(connectorSession, schema.getSchemaName().toLowerCase(ENGLISH)));
+        });
+        return functions.build();
+    }
+
+    @Override
     public ResolvedFunction decodeFunction(QualifiedName name)
     {
         return functionDecoder.fromQualifiedName(name)

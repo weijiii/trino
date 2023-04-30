@@ -13,6 +13,7 @@
  */
 package io.trino.metadata;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import io.airlift.slice.Slice;
 import io.trino.Session;
@@ -617,6 +618,11 @@ public interface Metadata
     //
 
     Collection<FunctionMetadata> listFunctions(Session session);
+
+    default Collection<FunctionMetadata> listFunctions(Session session, CatalogSchemaName schema)
+    {
+        return ImmutableList.of();
+    }
 
     ResolvedFunction decodeFunction(QualifiedName name);
 
