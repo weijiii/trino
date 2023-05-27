@@ -1199,6 +1199,8 @@ public class TestEffectivePredicateExtractor
                 toFunctionId(boundSignature.toSignature()),
                 SCALAR,
                 true,
+                false,
+                Optional.empty(),
                 new FunctionNullability(false, ImmutableList.of()),
                 ImmutableMap.of(),
                 ImmutableSet.of());
